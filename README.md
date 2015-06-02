@@ -1,2 +1,2 @@
 # tt-hw
-hello!
+Type theroy homeworks.
