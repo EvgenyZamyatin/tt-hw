@@ -65,15 +65,6 @@ hang' (Lmbd x e) = tmp (x++"'") (Lmbd x e)
                          Error s -> tmp (nw++"'") (Lmbd x e)
                          Ok ans  -> (Lmbd nw ans)
 
-
-    substitute' set (Var x) (t, e) = 
-        if (x /= t || S.member x set) 
-           then return (Var x) 
-           else if (((S.toList set) `L.intersect` (findFreeVars e)) == [])
-           then return e
-           else Error $ head ((S.toList set) `L.intersect` (findFreeVars e))
-
-
 reduceMeAll :: Exp -> Exp
 reduceMeAll e = if (e == (reduce e)) then e else reduceMeAll $ reduce e
 
