@@ -77,6 +77,8 @@ removeBadGaps [] = []
 removeBadGaps ('\\':' ':s) = removeBadGaps ('\\':s)
 removeBadGaps ('.':' ':s) = removeBadGaps ('.':s)
 removeBadGaps (' ':'.':s) = removeBadGaps ('.':s)
+removeBadGaps (')':' ':')':s) = "))" ++ (removeBadGaps s)
+removeBadGaps ('(':' ':'(':s) = "((" ++ (removeBadGaps s)
 removeBadGaps (x:s) = x:(removeBadGaps s)
 
 parseLambda = lmbdParser . normalize . lexer . removeBadGaps . glueGaps
