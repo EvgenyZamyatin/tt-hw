@@ -14,11 +14,33 @@ data MaybeError a = Ok a
 
 type Substitution = MaybeError Exp
 
+
 instance Monad MaybeError where
     return = Ok 
     s >>= g = case s of 
                 Error v -> Error v
                 Ok e -> g e
+
+class Substitutable a where 
+    substitute :: a -> (String, a) -> MaybeError a
+
+instance Substitutable Exp where
+    substitute = substitute' S.empty
+      where
+        substitute' :: S.Set String -> Exp -> (String, Exp) -> Substitution
+        substitute' set (App a b) p = 
+            (substitute' set a p) >>= 
+                \x -> (substitute' set b p >>= \y -> return (App x y))
+        substitute' set (Lmbd x e) p = 
+            (substitute' (S.insert x set) e p) >>= return . (\res->Lmbd x res)
+        substitute' set (Var x) (t, e) = 
+            if (x /= t || S.member x set) 
+                then return (Var x) 
+                else if (((S.toList set) `L.intersect` (findFreeVars e)) == [])
+                then return e
+                else Error $ head ((S.toList set) `L.intersect` (findFreeVars e))
+
+
 
 findFreeVars :: Exp -> [String]
 findFreeVars e = uniquify $ findFreeVars' S.empty e
@@ -31,22 +53,6 @@ findFreeVars e = uniquify $ findFreeVars' S.empty e
 uniquify :: Ord a => [a] -> [a]
 uniquify = S.toList . S.fromList
 
-
-substitute :: Exp -> (String, Exp) -> Substitution
-substitute = substitute' S.empty
-  where
-    substitute' :: S.Set String -> Exp -> (String, Exp) -> Substitution
-    substitute' set (App a b) p = 
-        (substitute' set a p) >>= 
-            \x -> (substitute' set b p >>= \y -> return (App x y))
-    substitute' set (Lmbd x e) p = 
-        (substitute' (S.insert x set) e p) >>= return . (\res->Lmbd x res)
-    substitute' set (Var x) (t, e) = 
-        if (x /= t || S.member x set) 
-           then return (Var x) 
-           else if (((S.toList set) `L.intersect` (findFreeVars e)) == [])
-           then return e
-           else Error $ head ((S.toList set) `L.intersect` (findFreeVars e))
 
 
 patch :: Exp -> Exp -> Exp
@@ -75,7 +81,6 @@ reduce (App (Lmbd v e) a) = extract $ substitute (patch e a) (v, a)
   where
     extract (Ok e) = e
 reduce (App x y) = App (reduce x) (reduce y)
-
 
 
 
