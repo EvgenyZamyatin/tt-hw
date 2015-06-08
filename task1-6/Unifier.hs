@@ -151,8 +151,6 @@ eqsCalc :: Int -> M.Map Name TypeExp -> Exp -> TypeExp -> (Int, [Equalation])
 eqsCalc tpCnt map (Var x) tp = (tpCnt+1, [(tp, extract $ M.lookup x map)])  
 eqsCalc tpCnt map (App a b) tp = 
     let ntp = TVar $ "t" ++ (show tpCnt) in
---    let (tpCnt', ma) = genMap (tpCnt+1) (findFreeVars a) in
---    let (tpCnt'', mb) = genMap tpCnt' (findFreeVars b) in
     let (tpCnt', ansa) = eqsCalc (tpCnt+1) map a $ TFun "f" [ntp, tp] in
     let (tpCnt'', ansb) = eqsCalc tpCnt' map b ntp in
         (tpCnt'', ansa++ansb)
