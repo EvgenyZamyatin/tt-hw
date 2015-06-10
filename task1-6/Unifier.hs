@@ -101,14 +101,15 @@ robOccursCheck x t m = foldr f True (findVars t)
 unifyTerms :: [Equalation] -> Unification
 unifyTerms = brush . (unifyTerms' M.empty)
 unifyTerms' :: M.Map Name Term -> [Equalation] -> Unification
-unifyTerms' map = foldr (\eq map -> map >>= f eq) (return map)
+unifyTerms' mp = foldr (\eq mp -> mp >>= f eq) (return mp)
   where 
     get :: Term -> M.Map Name Term -> Term
     get (TVar v) map = let res = M.lookup v map 
                         in case res of 
                              Nothing -> TVar v
                              Just e -> get e map
-    get a map = a
+    get (TFun f args) mp = TFun f (map (\x->get x mp) args)
+    --get a map = a
     f :: Equalation -> M.Map Name Term -> Unification
     f (a, b) map =
         let x = get a map in
