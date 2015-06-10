@@ -77,7 +77,8 @@ reduceMeAll e = if (e == (reduce e)) then e else reduceMeAll $ reduce e
 reduce :: Exp -> Exp
 reduce (Var v) = Var v
 reduce (Lmbd v e) = Lmbd v $ reduce e
-reduce (App (Lmbd v e) a) = extract $ substitute (patch e a) (v, a)
+reduce (App (Lmbd v e) a) = let patched = patch e a in 
+                                extract $ substitute patched (v, reduce patched)
   where
     extract (Ok e) = e
 reduce (App x y) = App (reduce x) (reduce y)
